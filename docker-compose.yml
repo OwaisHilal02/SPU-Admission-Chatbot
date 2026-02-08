@@ -1,0 +1,107 @@
+services:
+  data-loader:
+    build: ./Services/Data_Loader
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./Data:/app/data
+    container_name: data-loading-service
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HF_TOKEN=${HF_TOKEN:-}
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
+    networks:
+      - app-network
+
+  data-splitting:
+    build: ./Services/Data_Splitting
+    ports:
+      - "5002:5002"
+    container_name: data-splitting-service
+    networks:
+      - app-network
+
+  embedding-store:
+    build: ./Services/Embedding_Store
+    ports:
+      - "5003:5003"
+    container_name: embedding-store-service
+    depends_on:
+      - qdrant
+    environment:
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 4G
+    networks:
+      - app-network
+
+  rag-service:
+    build: ./Services/RAG_Service
+    ports:
+      - "5004:5004"
+    container_name: rag-service
+    depends_on:
+      - qdrant
+      - embedding-store
+    environment:
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+    networks:
+      - app-network
+
+  qa-chatting:
+    build: ./Services/QA_Chatting
+    ports:
+      - "5005:5005"
+    container_name: qa-chatting-service
+    depends_on:
+      - rag-service
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HF_TOKEN=${HF_TOKEN}
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+    deploy:
+      resources:
+        limits:
+          memory: 12G
+        reservations:
+          memory: 8G
+    networks:
+      - app-network
+
+  qdrant:
+    image: qdrant/qdrant:v1.10.1
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    container_name: qdrant-service
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app-network
+
+  # Remove the auto-pipeline service
+  # We'll run it manually once
+
+
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  qdrant_storage:
