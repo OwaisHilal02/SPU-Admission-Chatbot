@@ -2,8 +2,7 @@
 
 A bilingual (English/Arabic) AI-powered chatbot for the Syrian Private University (SPU) admission inquiries. Built with a Retrieval-Augmented Generation (RAG) architecture to provide accurate, source-grounded answers about faculties, fees, rules, and admission requirements.
 
-![SPU Chatbot Interface](Results/screenshot.png) 
-*(Note: Add a screenshot to Results/screenshot.png or update this path)*
+
 
 ## ✨ Features
 
