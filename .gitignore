@@ -58,3 +58,8 @@ chroma_db/
 tmp/
 Results/
 Token.txt
+Chunks.txt
+Seminar*.pdf
+draft.md
+evaluation_report.md
+
